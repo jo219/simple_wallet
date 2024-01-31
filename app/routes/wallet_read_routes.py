@@ -14,23 +14,9 @@ import uuid
 
 @app.route('/api/v1/wallet', methods=['GET'])
 @utils.authenticate_token
-def handle_view_balance_request(customer_xid):
-
-    balance_data = balance_repositories.Balance(
-        owned_by=customer_xid
-    ).get_balance_from_customer_xid(customer_xid)
-    
-    if (not balance_data) or (balance_data.status != 'enabled'):
-        response_data = {
-            "status": "fail",
-            "data": {
-                "error": "Wallet disabled"
-            }
-        }    
-        return jsonify(response_data), 400
-
-    # Generate the response data
-    response_data = {
+@utils.get_balance_data
+def handle_view_balance_request(balance_data):
+    return jsonify({
         "status": "success",
         "data": {
             "wallet": {
@@ -41,53 +27,36 @@ def handle_view_balance_request(customer_xid):
                 "balance": balance_data.balance
             }
         }
-    }
-
-    return jsonify(response_data), 200
+    }), 200
 
 
 # view transactions
 
 @app.route('/api/v1/wallet/transactions', methods=['GET'])
 @utils.authenticate_token
-def handle_view_transactions_request(customer_xid):
-
-    balance_data = balance_repositories.Balance(
-        owned_by=customer_xid
-    ).get_balance_from_customer_xid(customer_xid)
-    
-    if (not balance_data) or (balance_data.status != 'enabled'):
-        response_data = {
-            "status": "fail",
-            "data": {
-                "error": "Wallet disabled"
-            }
-        }    
-        return jsonify(response_data), 400
-
+@utils.get_balance_data
+def handle_view_transactions_request(balance_data):
     # transactions retrieval
     cur_transactions = transaction_repositories.Transaction(
-        owned_by=customer_xid
-    ).get_transactions_from_customer_xid(customer_xid)
+        owned_by=balance_data.owned_by
+    ).get_transactions_from_customer_xid(balance_data.owned_by)
 
-    # Generate the response data
-    response_data = {
+    # transactions parsing
+    cur_transactions_parsed = []
+    for t in cur_transactions:
+        cur_transactions_parsed.append({
+            "id": t.id,
+            "status": t.status,
+            "transacted_at": t.transacted_at,
+            "type": t.type,
+            "amount": t.amount,
+            "reference_id": t.reference_id
+        })
+
+    # generate return
+    return jsonify({
         "status": "success",
         "data": {
-            "transactions": cur_transactions
+            "transactions": cur_transactions_parsed
         }
-    }
-
-    '''
-    "transactions": [
-      {
-        "id": "7ae5aa7b-821f-4559-874b-07eea5f47962",
-        "status": "success",
-        "transacted_at": "1994-11-05T08:15:30-05:00",
-        "type": "deposit",
-        "amount": 14000,
-        "reference_id": "305247dc-6081-409c-b418-e9d65dee7a94"
-      },
-    '''
-
-    return jsonify(response_data), 200
+    }), 200

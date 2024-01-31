@@ -42,11 +42,11 @@ def create_table():
             owned_by TEXT NOT NULL,
             status TEXT,
             transacted_at TIMESTAMP,
-            type TEXT CHECK (status IN ('withdrawal', 'deposit')),
+            type TEXT CHECK (type IN ('withdrawal', 'deposit')),
             amount INTEGER,
             reference_id TEXT,
             FOREIGN KEY (owned_by) REFERENCES users (id),
-            UNIQUE(owned_by)
+            UNIQUE(reference_id)
         )
     ''')
 

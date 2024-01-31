@@ -21,13 +21,30 @@ class Balance:
             INSERT INTO balances (id, owned_by, status, enabled_at, disabled_at, balance) 
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (
-            str(self.id),
+            self.id,
             self.owned_by,
             self.status,
             self.enabled_at,
             self.disabled_at,
             self.balance
         ))
+
+        conn.commit()
+        conn.close()
+
+    def update_balance_amount(self, amount):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        update_time = datetime.now()
+
+        self.balance = amount
+
+        cursor.execute('''
+            UPDATE balances 
+            SET balance = ?
+            WHERE id = ?;
+        ''', (self.balance, self.id))
 
         conn.commit()
         conn.close()

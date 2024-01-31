@@ -14,21 +14,24 @@ def is_reference_id_exist(ref_id):
     conn.close()
 
     return result == 1
-    
+
 
 class Transaction:
-    def __init__(self, id=None, owned_by=None, status='success', transacted_at=None, type='deposit', amount=0, reference_id=None):
+    def __init__(self, id=None, owned_by=None, status='success', transacted_at=None, t_type='deposit', amount=0, reference_id=None):
         self.id = id
         self.owned_by = owned_by
         self.status = status
         self.transacted_at = transacted_at
-        self.type = type
+        self.type = t_type
         self.amount = amount
         self.reference_id = reference_id
 
     def create_transaction(self):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
+
+        print("self.type")
+        print(self.type)
 
         cursor.execute('''
             INSERT INTO transactions (id, owned_by, status, transacted_at, type, amount, reference_id) 
@@ -45,6 +48,7 @@ class Transaction:
 
         conn.commit()
         conn.close()
+        return self
 
     @classmethod
     def get_transactions_from_customer_xid(cls, customer_xid):

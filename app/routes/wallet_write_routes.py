@@ -62,7 +62,7 @@ def handle_activate_wallet_request(customer_xid):
     else:
         # initialize balance if record have not exist
         balance_data = balance_repositories.Balance(
-            id = uuid.uuid4(),
+            id = str(uuid.uuid4()),
             owned_by = customer_xid,
             status = 'enabled',
             enabled_at = datetime.now(),
@@ -93,47 +93,126 @@ def handle_activate_wallet_request(customer_xid):
     return jsonify(response_data), 201
         
 
+# cash-flowing util
+def cashf_sanitize_request_body(reference_id, amount):
+    error = ''
+    amount_int = 0
+    if (not reference_id) or (reference_id is None) or (reference_id.strip() == '') or transaction_repositories.is_reference_id_exist(reference_id):
+        error = 'invalid reference_id'
+    elif (not amount) or (amount is None) or (not amount.isdigit()):
+        error = 'invalid amount data format'
+    else:
+        amount_int = int(amount)
+        if amount_int < 0: 
+            error = 'amount must more than 0'
+
+    return reference_id, amount_int, error
+
+
 # deposits
 
 @app.route('/api/v1/wallet/deposits', methods=['POST'])
 @utils.authenticate_token
-def handle_deposits_wallet_request(customer_xid):
+@utils.get_balance_data
+def handle_deposits_wallet_request(balance_data):
 
-    reference_id = request.form.get('reference_id')
-    if (not reference_id) or (reference_id.strip() == '') or transaction_repositories.is_reference_id_exist(reference_id):
+    # error checking
+    reference_id, amount_int, error = cashf_sanitize_request_body(
+        request.form.get('reference_id'), 
+        request.form.get('amount'),
+    )
+    if error != '':
         return jsonify({
             "status": "fail",
             "data": {
-                "error": "invalid reference_id"
+                "error": error
             }
         }), 400
 
-    
+    cur_status = 'success'
+    # update balance
+    try:
+        balance_data.update_balance_amount(balance_data.balance + amount_int)
+    except:
+        cur_status = 'fail'
 
-    response_data = {
-        "status": "success"
+    # insert transaction
+    tr_obj = transaction_repositories.Transaction(
+        id = str(uuid.uuid4()), 
+        owned_by = balance_data.owned_by, 
+        status = cur_status, 
+        transacted_at = datetime.now(), 
+        t_type = 'deposit', 
+        amount = amount_int, 
+        reference_id = reference_id
+    ).create_transaction()
+
+    tr_data = {
+      "id": tr_obj.id,
+      "status": tr_obj.status,
+      "amount": tr_obj.amount,
+      "reference_id": tr_obj.reference_id
     }
 
-    return jsonify(response_data), 200
+    tr_data["deposited_by"] = tr_obj.owned_by
+    tr_data["deposited_at"] = tr_obj.transacted_at
+
+    return jsonify({
+        "status": "success",
+        "deposit": tr_data
+    }), 200
 
 
 # withdrawals
 
 @app.route('/api/v1/wallet/withdrawals', methods=['POST'])
 @utils.authenticate_token
-def handle_withdrawals_wallet_request(customer_xid):
+@utils.get_balance_data
+def handle_withdrawals_wallet_request(balance_data):
 
-    reference_id = request.form.get('reference_id')
-    if (not reference_id) or (reference_id.strip() == '') or transaction_repositories.is_reference_id_exist(reference_id):
+    # error checking
+    reference_id, amount_int, error = cashf_sanitize_request_body(
+        request.form.get('reference_id'), 
+        request.form.get('amount'),
+    )
+    if amount_int > balance_data.balance: error = 'balance insufficient'
+    if error != '':
         return jsonify({
             "status": "fail",
             "data": {
-                "error": "invalid reference_id"
+                "error": error
             }
         }), 400
 
-    response_data = {
-        "status": "success"
+    cur_status = 'success'
+    # update balance
+    try:
+        balance_data.update_balance_amount(balance_data.balance - amount_int)
+    except:
+        cur_status = 'fail'
+
+    # insert transaction
+    tr_obj = transaction_repositories.Transaction(
+        id = str(uuid.uuid4()), 
+        owned_by = balance_data.owned_by, 
+        status = cur_status, 
+        transacted_at = datetime.now(), 
+        t_type = 'withdrawal', 
+        amount = amount_int, 
+        reference_id = reference_id
+    ).create_transaction()
+
+    tr_data = {
+      "id": tr_obj.id,
+      "status": tr_obj.status,
+      "amount": tr_obj.amount,
+      "reference_id": tr_obj.reference_id
     }
 
-    return jsonify(response_data), 200
+    tr_data["withdrawn_by"] = tr_obj.owned_by
+    tr_data["withdrawn_at"] = tr_obj.transacted_at
+
+    return jsonify({
+        "status": "success",
+        "withdrawal": tr_data
+    }), 200

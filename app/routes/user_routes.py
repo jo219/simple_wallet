@@ -2,7 +2,13 @@ from app import app
 from flask import request, jsonify
 
 import app.utils as utils
-from app.repositories import user_repositories
+from app.repositories import (
+    user_repositories,
+    transaction_repositories,
+)
+
+import uuid
+
 
 @app.route('/api/v1/init', methods=['POST'])
 def handle_init_request():
@@ -34,3 +40,18 @@ def handle_init_request():
 
     return jsonify(response_data), 201
         
+@app.route('/api/v1/reference-id', methods=['GET'])
+def handle_generate_reference_id_request():
+    
+    reference_id = str(uuid.uuid4())
+    while transaction_repositories.is_reference_id_exist(reference_id):
+        reference_id = str(uuid.uuid4())
+
+    response_data = {
+        "data": {
+            "reference_id": reference_id
+        },
+        "status": "success"
+    }
+
+    return jsonify(response_data), 201

@@ -1,0 +1,820 @@
+{
+	"info": {
+		"_postman_id": "c7213d20-9f83-48d2-b57d-e2bdb286e401",
+		"name": "Mini Wallet Exercise",
+		"description": "This is a technical exercise for software engineering candidates. \n\nFor the exercise, use this documentation to build an API backend service, for managing a simple mini wallet. \n* Submit a working executable program that can be run in `localhost` that is based on this documentation as close as you can. The source code should be shared as a publicly accessible repo on either GitHub, GitLab, Bitbucket, etc. Please provide steps on how to \"install\" and \"run\" the program.\n* If working code is not possible, submit detailed technical design specs on the logic and framework that would allow any engineer to implement as with minimal time and supervision.\n\nThe idea is that this API is exposed by the wallet service for a wallet feature. Please assume that the customer verification was already done and information/profile was already stored in a separate customer service.\n\nFor authentication to this wallet service, pass it as a header called `Authorization` with the content in the format of `Token <my token>`.\n\nThe API is a HTTP REST API and the responses are returned in JSON with structure based on  [JSend](https://github.com/omniti-labs/jsend).\n\nAll the best!",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18256087"
+	},
+	"item": [
+		{
+			"name": "ping",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{mw_base_url}}/ping",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"ping"
+					]
+				},
+				"description": "Before using the wallet service, an account needs to be created. This endpoint is used to create an account as well as getting the token for the other API endpoints."
+			},
+			"response": [
+				{
+					"name": "service successfully run",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "customer_xid",
+									"value": "{{mw_customer_xid}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{mw_base_url}}/ping",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"ping"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [],
+					"cookie": [],
+					"body": "{\n    \"message\": \"pong\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Initialize my account for wallet",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var token = jsonData.data.token;",
+							"pm.environment.set(\"mw_api_token\", token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "customer_xid",
+							"value": "{{mw_customer_xid}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{mw_base_url}}/api/v1/init",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"init"
+					]
+				},
+				"description": "Before using the wallet service, an account needs to be created. This endpoint is used to create an account as well as getting the token for the other API endpoints."
+			},
+			"response": [
+				{
+					"name": "initialized successfully",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "customer_xid",
+									"value": "{{mw_customer_xid}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [],
+					"cookie": [],
+					"body": "{\n  \"data\": {\n    \"token\": \"cb04f9f26632ad602f14acef21c58f58f6fe5fb55a\"\n  },\n  \"status\": \"success\"\n}"
+				},
+				{
+					"name": "failed missing required field",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [],
+					"cookie": [],
+					"body": "{\n  \"data\": {\n    \"error\": {\n      \"customer_xid\": [\n        \"Missing data for required field.\"\n      ]\n    }\n  },\n  \"status\": \"fail\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Enable my wallet",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Token {{mw_api_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{mw_base_url}}/api/v1/wallet",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet"
+					]
+				},
+				"description": "As a customer, I can enable my wallet using this API endpoint. The wallet stores the virtual money that customers can apply for approval. The virtual money can be used to make purchases with our partners, who are various online merchants.\n\nIf the wallet is already enabled, this endpoint would fail. This endpint should be usable again only if the wallet is disabled.\n\nBefore enabling the wallet, the customer cannot view, add, or use its virtual money."
+			},
+			"response": [
+				{
+					"name": "enabled successfully",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{mw_api_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [],
+					"cookie": [],
+					"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"wallet\": {\n        \t\"id\": \"6ef31ed3-f396-4b6c-8049-674ddede1b16\",\n        \t\"owned_by\": \"c4d7d61f-b702-44a8-af97-5dbdafa96551\",\n        \t\"status\": \"enabled\",\n        \t\"enabled_at\": \"1994-11-05T08:15:30-05:00\",\n        \t\"balance\": 0\n        }\n    }\n}"
+				},
+				{
+					"name": "failed as already enabled",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{mw_api_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [],
+					"cookie": [],
+					"body": "{\n    \"status\": \"fail\",\n    \"data\": {\n    \t\"error\": \"Already enabled\" \n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "View my wallet balance",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Token {{mw_api_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{mw_base_url}}/api/v1/wallet",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet"
+					]
+				},
+				"description": "With this API endpoint, a customer can view the current balance of virtual money. After adding or using virtual money, it is not expected to have the balance immediately updated. The maximum delay for updating the balance is 5 seconds."
+			},
+			"response": [
+				{
+					"name": "viewed successfully",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{mw_api_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": null,
+					"cookie": [],
+					"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"wallet\": {\n            \"id\": \"c4d7d61f-b702-44a8-af97-5dbdafa96551\",\n            \"owned_by\": \"6ef31975-67b0-421a-9493-667569d89556\",\n            \"status\": \"enabled\",\n            \"enabled_at\": \"1994-11-05T08:15:30-05:00\",\n            \"balance\": 0\n        }\n    }\n}"
+				},
+				{
+					"name": "failed, not yet enabled",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{mw_api_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": null,
+					"cookie": [],
+					"body": "{\n    \"status\": \"fail\",\n    \"data\": {\n        \"error\": \"Wallet disabled\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "View my wallet transactions",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Token {{mw_api_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{mw_base_url}}/api/v1/wallet/transactions",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"transactions"
+					]
+				},
+				"description": "With this API endpoint, a customer can view all the transactions that have been made, including adding or using the virtual money."
+			},
+			"response": [
+				{
+					"name": "failed, not yet enabled",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{mw_api_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "Not Found",
+					"code": 404,
+					"_postman_previewlanguage": "json",
+					"header": null,
+					"cookie": [],
+					"body": "{\n    \"status\": \"fail\",\n    \"data\": {\n        \"error\": \"Wallet disabled\"\n    }\n}"
+				},
+				{
+					"name": "viewed successfully",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{mw_api_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": null,
+					"cookie": [],
+					"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"transactions\": [\n            {\n                \"id\": \"7ae5aa7b-821f-4559-874b-07eea5f47962\",\n                \"status\": \"success\",\n                \"transacted_at\": \"1994-11-05T08:15:30-05:00\",\n                \"type\": \"deposit\",\n                \"amount\": 14000,\n                \"reference_id\": \"305247dc-6081-409c-b418-e9d65dee7a94\"\n            },\n            {\n                \"id\": \"7161d0eb-79b9-4177-b454-cad7a53f46dc\",\n                \"status\": \"failed\",\n                \"transacted_at\": \"1994-11-10T08:15:30-05:00\",\n                \"type\": \"withdrawal\",\n                \"amount\": 890000,\n                \"reference_id\": \"6f07d2db-4db4-4bee-99c8-4db9a430951d\"\n            },\n            {\n                \"id\": \"c6dd5b25-d4fe-411c-a9c0-e2a9f1c724b3\",\n                \"status\": \"success\",\n                \"transacted_at\": \"1994-11-10T08:15:41-05:00\",\n                \"type\": \"withdrawal\",\n                \"amount\": 890000,\n                \"reference_id\": \"57fa2a07-c1b7-40c8-8096-3736d1c8cfde\"\n            }\n        ]\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "generate reference_id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"var reference_id = jsonData.data.reference_id;",
+							"pm.environment.set(\"mw_deposit_reference_id\", reference_id);",
+							"pm.environment.set(\"mw_withdraw_reference_id\", reference_id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{mw_base_url}}/api/v1/reference-id",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"reference-id"
+					]
+				},
+				"description": "Before using the wallet service, an account needs to be created. This endpoint is used to create an account as well as getting the token for the other API endpoints."
+			},
+			"response": [
+				{
+					"name": "reference_id generated",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "customer_xid",
+									"value": "{{mw_customer_xid}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/reference-id",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"reference-id"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [],
+					"cookie": [],
+					"body": "{\n    \"data\": {\n        \"reference_id\": \"b838a904-d11f-42a8-839a-a18338e30516\"\n    },\n    \"status\": \"success\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Add virtual money to my wallet",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Token {{mw_api_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "amount",
+							"value": "{{mw_deposit_amount}}",
+							"type": "text"
+						},
+						{
+							"key": "reference_id",
+							"value": "{{mw_deposit_reference_id}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{mw_base_url}}/api/v1/wallet/deposits",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"deposits"
+					]
+				},
+				"description": "With this API endpoint, a customer can add virtual money to the wallet balance as a deposit once the wallet is enabled. Reference ID passed must be unique for every deposit."
+			},
+			"response": [
+				{
+					"name": "added successfully",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Token {{mw_api_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "amount",
+									"value": "{{mw_deposit_amount}}",
+									"type": "text"
+								},
+								{
+									"key": "reference_id",
+									"value": "{{mw_deposit_reference_id}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet/deposits",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet",
+								"deposits"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": null,
+					"cookie": [],
+					"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"deposit\": {\n            \"id\": \"ea0212d3-abd6-406f-8c67-868e814a2433\",\n            \"deposited_by\": \"526ea8b2-428e-403b-b9fd-f10972e0d6fe\",\n            \"status\": \"success\",\n            \"deposited_at\": \"1994-11-05T08:15:30-05:00\",\n            \"amount\": 0,\n            \"reference_id\": \"f4cee01f-9188-4a29-aa9a-cb7fb97d8e0a\"\n        }\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Use virtual money from my wallet",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Token {{mw_api_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "amount",
+							"value": "{{mw_withdraw_amount}}",
+							"type": "text"
+						},
+						{
+							"key": "reference_id",
+							"value": "{{mw_withdraw_reference_id}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{mw_base_url}}/api/v1/wallet/withdrawals",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet",
+						"withdrawals"
+					]
+				},
+				"description": "With this API endpoint, a customer can use the virtual money from the wallet balance as a withdrawal once the wallet is enabled. The amount being used must not be more than the current balance. Reference ID passed must be unique for every withdrawal."
+			},
+			"response": [
+				{
+					"name": "withdrawn successfully",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{mw_api_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "amount",
+									"value": "{{mw_withdraw_amount}}",
+									"type": "text"
+								},
+								{
+									"key": "reference_id",
+									"value": "{{mw_withdraw_reference_id}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet/withdrawals",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet",
+								"withdrawals"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "json",
+					"header": [],
+					"cookie": [],
+					"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"withdrawal\": {\n            \"id\": \"ea0212d3-abd6-406f-8c67-868e814a2433\",\n            \"withdrawn_by\": \"526ea8b2-428e-403b-b9fd-f10972e0d6fe\",\n            \"status\": \"success\",\n            \"withdrawn_at\": \"1994-11-05T08:15:30-05:00\",\n            \"amount\": \"{{mw_withdraw_amount}}\",\n            \"reference_id\": \"c4cee01f-2188-4a29-aa9a-cb7fb97d8e0a\"\n        }\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Disable my wallet",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Authorization",
+						"type": "text",
+						"value": "Token {{mw_api_token}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "is_disabled",
+							"value": "true",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{mw_base_url}}/api/v1/wallet",
+					"host": [
+						"{{mw_base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"wallet"
+					]
+				},
+				"description": "With this API endpoint, a customer's wallet can be disabled as determined by the service. Once disabled, the customer cannot view, add, or use its virtual money."
+			},
+			"response": [
+				{
+					"name": "disabled successfully",
+					"originalRequest": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"type": "text",
+								"value": "Token {{mw_api_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "is_disabled",
+									"value": "true",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{mw_base_url}}/api/v1/wallet",
+							"host": [
+								"{{mw_base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"wallet"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": null,
+					"cookie": [],
+					"body": "{\n    \"status\": \"success\",\n    \"data\": {\n        \"wallet\": {\n            \"id\": \"6ef31ed3-f396-4b6c-8049-674ddede1b16\",\n            \"owned_by\": \"526ea8b2-428e-403b-b9fd-f10972e0d6fe\",\n            \"status\": \"disabled\",\n            \"disabled_at\": \"1994-11-05T08:15:30-05:00\",\n            \"balance\": 0\n        }\n    }\n}"
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "Token {{mw_api_token}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "Authorization",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
