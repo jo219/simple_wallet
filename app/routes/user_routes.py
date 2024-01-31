@@ -1,6 +1,9 @@
 from app import app
 from flask import request, jsonify
 
+import app.utils as utils
+from app.repositories import user_repositories
+
 @app.route('/api/v1/init', methods=['POST'])
 def handle_init_request():
     # error handling
@@ -19,7 +22,9 @@ def handle_init_request():
         return jsonify(error_response), 400
 
     # logic start
-    token = "cb04f9f26632ad602f14acef21c58f58f6fe5fb55b"
+    token = utils.generate_random_string(42)
+    user_repositories.store_session_token(customer_xid, token)
+
     response_data = {
         "data": {
             "token": token
