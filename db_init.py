@@ -29,7 +29,8 @@ def create_table():
             owned_by TEXT,
             status TEXT,
             enabled_at TIMESTAMP,
-            balance INTEGER
+            balance INTEGER, 
+            FOREIGN KEY (owned_by) REFERENCES users (id)
         )
     ''')
 

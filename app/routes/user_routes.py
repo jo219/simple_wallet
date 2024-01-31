@@ -8,7 +8,7 @@ from app.repositories import user_repositories
 def handle_init_request():
     # error handling
     customer_xid = request.form.get('customer_xid')
-    if not customer_xid:
+    if (not customer_xid) or (customer_xid.strip() == ''):
         error_response = {
             "data": {
                 "error": {
@@ -32,5 +32,5 @@ def handle_init_request():
         "status": "success"
     }
 
-    return jsonify(response_data), 200
+    return jsonify(response_data), 201
         

@@ -1,6 +1,6 @@
 import sqlite3
 
-def store_session_token(id, token):
+def get_wallet_from_customer_xid(customer_xid):
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
 
