@@ -31,42 +31,36 @@ class Balance:
 
         conn.commit()
         conn.close()
+
+    def update_balance_status(self, is_enable):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        update_time = datetime.now()
+
+        if is_enable:
+            self.status = 'enabled'
+            self.enabled_at = update_time
+        else:
+            self.status = 'disabled'
+            self.disabled_at = update_time
+
+        cursor.execute('''
+            UPDATE balances 
+            SET status = ?,
+                ''' + self.status + '''_at = ?
+            WHERE id = ?;
+        ''', (self.status, update_time, self.id))
+
+        conn.commit()
+        conn.close()
+        return self
     
     def enable_wallet(self):
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-
-        self.status = 'enabled'
-        self.enabled_at = datetime.now()
-
-        cursor.execute('''
-            UPDATE balances 
-            SET status = ?,
-                enabled_at = ?
-            WHERE id = ?;
-        ''', (self.status, self.enabled_at, self.id))
-
-        conn.commit()
-        conn.close()
-        return self
+        return self.update_balance_status(True)
 
     def disable_wallet(self):
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-
-        self.status = 'disabled'
-        self.disabled_at = datetime.now()
-
-        cursor.execute('''
-            UPDATE balances 
-            SET status = ?,
-                disabled_at = ?
-            WHERE id = ?;
-        ''', (self.status, self.disabled_at, self.id))
-
-        conn.commit()
-        conn.close()
-        return self
+        return self.update_balance_status(False)
 
     @classmethod
     def get_balance_from_customer_xid(cls, customer_xid):
