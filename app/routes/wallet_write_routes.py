@@ -3,7 +3,10 @@ from flask import request, jsonify
 
 import app.utils as utils
 
-from app.repositories import wallet_repositories
+from app.repositories import (
+    balance_repositories,
+    transaction_repositories,
+)
 
 import uuid
 from datetime import datetime
@@ -16,7 +19,7 @@ from datetime import datetime
 def handle_activate_wallet_request(customer_xid):
 
     # retrieve existing db
-    balance_data = wallet_repositories.Balance(
+    balance_data = balance_repositories.Balance(
         owned_by=customer_xid
     ).get_balance_from_customer_xid(customer_xid)
 
@@ -58,7 +61,7 @@ def handle_activate_wallet_request(customer_xid):
             balance_data = balance_data.disable_wallet()
     else:
         # initialize balance if record have not exist
-        balance_data = wallet_repositories.Balance(
+        balance_data = balance_repositories.Balance(
             id = uuid.uuid4(),
             owned_by = customer_xid,
             status = 'enabled',
@@ -95,6 +98,18 @@ def handle_activate_wallet_request(customer_xid):
 @app.route('/api/v1/wallet/deposits', methods=['POST'])
 @utils.authenticate_token
 def handle_deposits_wallet_request(customer_xid):
+
+    reference_id = request.form.get('reference_id')
+    if (not reference_id) or (reference_id.strip() == '') or transaction_repositories.is_reference_id_exist(reference_id):
+        return jsonify({
+            "status": "fail",
+            "data": {
+                "error": "invalid reference_id"
+            }
+        }), 400
+
+    
+
     response_data = {
         "status": "success"
     }
@@ -107,6 +122,16 @@ def handle_deposits_wallet_request(customer_xid):
 @app.route('/api/v1/wallet/withdrawals', methods=['POST'])
 @utils.authenticate_token
 def handle_withdrawals_wallet_request(customer_xid):
+
+    reference_id = request.form.get('reference_id')
+    if (not reference_id) or (reference_id.strip() == '') or transaction_repositories.is_reference_id_exist(reference_id):
+        return jsonify({
+            "status": "fail",
+            "data": {
+                "error": "invalid reference_id"
+            }
+        }), 400
+
     response_data = {
         "status": "success"
     }
