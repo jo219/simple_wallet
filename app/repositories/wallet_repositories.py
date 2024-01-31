@@ -1,6 +1,8 @@
 import sqlite3
 import uuid
 
+from datetime import datetime
+
 
 class Balance:
     def __init__(self, id=None, owned_by=None, status='enabled', enabled_at=None, disabled_at=None, balance=0):
@@ -29,6 +31,42 @@ class Balance:
 
         conn.commit()
         conn.close()
+    
+    def enable_wallet(self):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        self.status = 'enabled'
+        self.enabled_at = datetime.now()
+
+        cursor.execute('''
+            UPDATE balances 
+            SET status = ?,
+                enabled_at = ?
+            WHERE id = ?;
+        ''', (self.status, self.enabled_at, self.id))
+
+        conn.commit()
+        conn.close()
+        return self
+
+    def disable_wallet(self):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        self.status = 'disabled'
+        self.disabled_at = datetime.now()
+
+        cursor.execute('''
+            UPDATE balances 
+            SET status = ?,
+                disabled_at = ?
+            WHERE id = ?;
+        ''', (self.status, self.disabled_at, self.id))
+
+        conn.commit()
+        conn.close()
+        return self
 
     @classmethod
     def get_balance_from_customer_xid(cls, customer_xid):

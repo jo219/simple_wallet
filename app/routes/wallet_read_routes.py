@@ -17,7 +17,7 @@ def handle_view_balance_request(customer_xid):
         owned_by=customer_xid
     ).get_balance_from_customer_xid(customer_xid)
     
-    if not balance_data:
+    if (not balance_data) or (balance_data.status != 'enabled'):
         response_data = {
             "status": "fail",
             "data": {
