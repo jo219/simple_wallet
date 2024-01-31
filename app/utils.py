@@ -36,3 +36,22 @@ def authenticate_token(func):
 
         return func(customer_xid, *args, **kwargs)
     return wrapper
+
+
+# middleware to access db
+
+def with_db(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        # Call the decorated function with the database cursor
+        result = func(cursor, *args, **kwargs)
+
+        conn.commit()
+        conn.close()
+
+        return result
+
+    return wrapper

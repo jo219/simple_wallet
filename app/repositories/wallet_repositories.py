@@ -1,26 +1,44 @@
 import sqlite3
+import uuid
 
-def get_wallet_from_customer_xid(customer_xid):
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
 
-    cursor.execute('''
-        INSERT OR REPLACE INTO users (id, token) 
-        VALUES (?, ?)
-    ''', (id, token))
+class Balance:
+    def __init__(self, id=None, owned_by=None, status='enabled', enabled_at=None, disabled_at=None, balance=0):
+        self.id = id
+        self.owned_by = owned_by
+        self.status = status
+        self.enabled_at = enabled_at
+        self.disabled_at = disabled_at
+        self.balance = balance
 
-    conn.commit()
-    conn.close()
+    def init_balance(self):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
 
-def get_id_from_token(token):
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO balances (id, owned_by, status, enabled_at, disabled_at, balance) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            str(self.id),
+            self.owned_by,
+            self.status,
+            self.enabled_at,
+            self.disabled_at,
+            self.balance
+        ))
 
-    cursor.execute("SELECT id FROM users WHERE token=?", (token,))
-    result = cursor.fetchone()
+        conn.commit()
+        conn.close()
 
-    if result:
-        customer_xid = result[0]
-        return True, customer_xid
-    else:
-        return False, None
+    @classmethod
+    def get_balance_from_customer_xid(cls, customer_xid):
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM balances WHERE owned_by=?", (customer_xid,))
+        balance_data = cursor.fetchone()
+        conn.close()
+
+        if balance_data:
+            return cls(*balance_data)
+        return None

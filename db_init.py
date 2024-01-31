@@ -26,22 +26,27 @@ def create_table():
     cursor.execute('''
         CREATE TABLE balances (
             id TEXT PRIMARY KEY,
-            owned_by TEXT,
-            status TEXT,
+            owned_by TEXT NOT NULL,
+            status TEXT CHECK (status IN ('enabled', 'disabled')),
             enabled_at TIMESTAMP,
+            disabled_at TIMESTAMP,
             balance INTEGER, 
-            FOREIGN KEY (owned_by) REFERENCES users (id)
+            FOREIGN KEY (owned_by) REFERENCES users (id),
+            UNIQUE(owned_by)
         )
     ''')
 
     cursor.execute('''
         CREATE TABLE transactions (
             id TEXT PRIMARY KEY,
+            owned_by TEXT NOT NULL,
             status TEXT,
             transacted_at TIMESTAMP,
-            type TEXT,
+            type TEXT CHECK (status IN ('withdrawal', 'deposit')),
             amount INTEGER,
-            reference_id TEXT
+            reference_id TEXT,
+            FOREIGN KEY (owned_by) REFERENCES users (id),
+            UNIQUE(owned_by)
         )
     ''')
 
